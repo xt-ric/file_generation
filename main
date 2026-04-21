@@ -1,0 +1,67 @@
+/** 
+ * GLOBAL CONSTANTS 
+ */
+const REGEX = {
+  ANY_TAG: /<<(.+?)>>/g,                   // Find anything between << >>
+  START_TAG: /<<Start:\s*\[(.+?)\]\s*>>/i, // Find <<Start: [list]>>
+  END_TAG: /<<End>>/i,                    // Find <<End>>
+  BRACKETS: /\[([^\]]+)\]/g               // Extract items inside [ ]
+};
+const DEREF_BRACKET_REGEX_g = /\[([^\]]+)\]\.?/g;//matches [deref-column1].[deref-column2].[property] syntax (with dot)
+const REF_BRACKET_REGEX_g = /\[([^\]]+)\]/g;//matches [ref-column][property] syntax (with no dot)
+const SIMPLE_BRACKET_REGEX_g = /<<\[(.*?)\]>>/g;//matches [property] syntax (disregarding any ref or deref)
+const PLACEHOLDER_REGEX_g = /<<(.+?)>>/g;//matches [] syntax (disregarding any ref or deref)
+const START_END_REGEX_gi = /<<Start:\s*(.*?)>>([\s\S]*?)<<End>>/gi;
+
+
+function main_call_template(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, row_id, tableName, template_doc_id, structure_ss_id, folder_id, imageSize, b_pdf) {
+
+  //get data structure
+  const o_app_structure = getFileAppStructure(app_structure_docId_dev)
+  //const json_data_structure=processAppStructure(o_app_structure)//TO CONTINUE
+
+  const json_data_structure = getDataStructureFromSheetsSchema(structure_ss_id);//TO DELETE WHEN STEP BEFORE IS COMPLETED
+  Logger.log("*** json_data_structure *** \n\n " + JSON.stringify(json_data_structure, null, 2));
+
+  //get placeholders from template doc id
+  const json_placeholdersFromDoc = getPlaceHoldersFromDoc(template_doc_id)//nouvelle approche
+
+  //get data according to data structure and needed placeholders
+  const o_rowDataAppSheet = getRowDataFromAppSheet(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, tableName, row_id, json_data_structure);
+  const o_refDataFromAppSheet = getRefDataFromAppSheet(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, o_rowDataAppSheet, json_placeholdersFromDoc, json_data_structure, tableName);
+
+  const o_mergedData = mergeRowRefData(o_rowDataAppSheet, o_refDataFromAppSheet);
+  Logger.log(JSON.stringify(o_mergedData, null, 2))
+  const o_mergedDataWithImageBlob = getImagesBlobFromAppSheet(APP_ID, o_mergedData, tableName, json_data_structure)
+  // Logger.log(JSON.stringify(o_mergedData, null, 2));
+
+  //Create template copy
+  let newDocId = copyDoc(template_doc_id, folder_id);
+
+  //replace placeholders from retrieved data
+  replacePlaceholdersInDoc(newDocId, o_mergedDataWithImageBlob, json_data_structure, tableName, imageSize);
+
+  if (b_pdf) {
+    // --- PDF GENERATION ---
+    const newDocFile = DriveApp.getFileById(newDocId);
+
+    // Correction pour éviter les erreurs si le fichier est déjà dans la racine
+    let parentFolder;
+    const parents = newDocFile.getParents();
+    if (parents.hasNext()) {
+      parentFolder = parents.next();
+    } else {
+      parentFolder = DriveApp.getRootFolder();
+    }
+
+    const pdfBlob = newDocFile.getAs('application/pdf');
+    pdfBlob.setName(newDocFile.getName() + ".pdf");
+    const pdfFile = parentFolder.createFile(pdfBlob);
+    Logger.log("Successfully created PDF: " + pdfFile.getUrl());
+
+    newDocFile.setTrashed(true);
+  }//if (b_pdf){
+
+}//function main_call_template(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, row_id, table, docId, ss_structure_id, defaultFolderPath_id) {
+
+
