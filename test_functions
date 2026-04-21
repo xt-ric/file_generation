@@ -1,0 +1,282 @@
+////////////
+/// TEMP ///
+////////////
+
+function test_getHTML_documentation() {
+
+  const app_documentation_html_docId=app_documentation_html_docId_dev
+  Logger.log("app_documentation_html_docId:" + app_documentation_html_docId)
+
+  const app_structure_file = DriveApp.getFileById(app_documentation_html_docId)
+  const app_structure_content = app_structure_file.getBlob().getDataAsString()
+  const o_app_structure = JSON.parse(app_structure_content)
+
+  Logger.log("o_app_structure: " + JSON.stringify(o_app_structure, null, 2))
+
+
+
+}//function test_getHTML_documentation(){
+
+//********************* */
+//*** APPSHEET API TEST */ 
+//********************* */
+
+function test_appsheetAPI_find() {
+
+  let APP_ID = APP_ID_dev
+  let APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  let APPSHEET_REGION = APPSHEET_REGION_dev
+  let table = "item"
+  let text_selector = "FILTER(item,[price]<=2 )"
+
+  let response = appsheetAPI_find(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, text_selector)
+  Logger.log("test_appsheetAPI_find stringified response: " + JSON.stringify(response, null, 2))
+
+}//function test_appsheetAPI_find(){
+
+function test_appsheetAPI_edit() {
+  let APP_ID = APP_ID_dev
+  let APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  let APPSHEET_REGION = APPSHEET_REGION_dev
+  let table = "item"
+  let a_rows = [{ "id": "item_id_1", "price": "1" }, { "id": "item_id_2", "price": "2" }]
+
+  appsheetAPI_edit(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_rows)
+
+}//function test_appsheetAPI_edit(){
+
+function test_appsheetAPI_add() {
+  let APP_ID = APP_ID_dev
+  let APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  let APPSHEET_REGION = APPSHEET_REGION_dev
+  let table = "item"
+  let a_rows = [{ "price": "4" }, { "price": "5" }]
+
+  appsheetAPI_add(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_rows)
+
+}//function test_appsheetAPI_add(){
+
+function test_appsheetAPI_delete() {
+  let APP_ID = APP_ID_dev
+  let APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  let APPSHEET_REGION = APPSHEET_REGION_dev
+  let table = "item"
+  let a_rows = [{ "id": "item_id_4" }, { "id": "item_id_5" }]
+
+  appsheetAPI_delete(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_rows)
+
+}//function test_appsheetAPI_delete(){
+
+function test_appsheetAPI_action() {
+  let APP_ID = APP_ID_dev
+  let APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  let APPSHEET_REGION = APPSHEET_REGION_dev
+  let table = "item"
+  let custom_action = "set_price_up"
+  let a_rows = [{ "id": "item_id_1" }, { "id": "item_id_2" }]
+
+
+  appsheetAPI_action(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, custom_action, a_rows)
+
+}//function test_appsheetAPI_action(){
+
+//*********************** */
+//*** MAIN FUNCTIONS TEST */ 
+//*********************** */
+
+function test_main_call_template() {
+
+  const APP_ID = APP_ID_dev
+  const APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  const APPSHEET_REGION = APPSHEET_REGION_dev
+
+  const template_doc_id = template_doc_id_dev;
+  const structure_ss_id = structure_ss_id_dev;
+  const folder_id = folder_id_dev;
+  const imageSize = "small" // let's choose small, tiny, default, and so on.
+
+  const tableName = "item";//the table the template will run against
+  const row_id = "item_id_3";//the record the template will run against
+  const b_pdf=true
+  main_call_template(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, row_id, tableName, template_doc_id, structure_ss_id, folder_id, imageSize,b_pdf);
+
+} //function test_main_call_template() {
+
+function test_getFileAppStructure() {
+
+  const o_app_structure = getFileAppStructure(app_structure_docId_dev)
+  Logger.log("o_app_structure: " + JSON.stringify(o_app_structure, null, 2))
+
+}//function test_getFileAppStructure(){
+
+
+
+function test_getDataStructureFromSheetsSchema() {
+
+  let json_data_structure = getDataStructureFromSheetsSchema(structure_ss_id_dev)
+  Logger.log(JSON.stringify(json_data_structure, null, 2));
+
+}//function test_convertSheetToJson()
+
+function test_getPlaceHoldersFromDoc() {
+
+  const o_structure = getPlaceHoldersFromDoc(template_doc_id_dev)
+  Logger.log(JSON.stringify(o_structure, null, 2))
+
+}//function test_getPlaceHoldersFromDoc() {{
+
+function test_getRowDataFromAppSheet() {
+
+  const tableName = "item"
+  const row_id = "item_id_3"
+  const json_data_structure = json_data_structure_dev
+  const json_rowDataFromAppSheet = getRowDataFromAppSheet(APP_ID_dev, APP_ACCESS_KEY_dev, APPSHEET_REGION_dev, tableName, row_id, json_data_structure)
+  Logger.log("Type of rowDataAppSheet: " + typeof json_rowDataFromAppSheet);
+  Logger.log("rowDataAppSheet:" + JSON.stringify(json_rowDataFromAppSheet, null, 2));
+
+}//function test_getRawDataFromAppSheet(){
+
+function test_getRefDataFromAppSheet() {
+
+  const APP_ID = APP_ID_dev
+  const APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  const APPSHEET_REGION = APPSHEET_REGION_dev
+  const json_rowDataAppSheet = json_rowDataFromAppSheet_dev
+  const json_data_structure = json_data_structure_dev
+  const json_placeholdersFromDoc = json_placeholdersFromDoc_dev
+  const tableName = "item"
+
+  const refDataFromAppSheet = getRefDataFromAppSheet(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, json_rowDataAppSheet, json_placeholdersFromDoc, json_data_structure, tableName)
+  Logger.log("result: " + JSON.stringify(refDataFromAppSheet, null, 2))
+
+}//function test_getRefDataFromAppSheet() {
+
+function test_getRefListDataFromAppSheet() {
+
+  const APP_ID = APP_ID_dev
+  const APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  const APPSHEET_REGION = APPSHEET_REGION_dev
+  const a_refList_id = ["b93caaff", "7fef709d"]
+  const table = "entry"
+  const json_data_structure = json_data_structure_dev
+
+  const refListDataFromAppSheet = getRefListDataFromAppSheet(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_refList_id, json_data_structure)
+  console.log("rawRelatedDataAppSheet:", JSON.stringify(refListDataFromAppSheet, null, 2));
+
+}//function test_getRefListDataFromAppSheet(){
+
+function test_mergeRowRefData() {
+
+  let o_rowDataAppSheet =
+    { "_RowNumber": "4", "id": "item_id_3", "label": "hammer", "category": "tool", "price": "3", "trigger_script": "8", "Related entrys": "b93caaff , 7fef709d", "_sumEntry": "9" };
+
+  let o_refDataFromAppSheet = {
+    "Related entrys": [
+      { "_RowNumber": "4", "id": "b93caaff", "timestamp": "09/16/2025 10:54:12", "item": "item_id_3", "amount": "4" },
+      { "_RowNumber": "5", "id": "7fef709d", "timestamp": "09/16/2025 11:03:22", "item": "item_id_3", "amount": "5" }]
+  }
+  /*
+  Logger.log(
+  "Starting mergeRowRefData..."
+  + "\n o_rowDataAppSheet: " + JSON.stringify(o_rowDataAppSheet, null, 2)
+  + "\n o_refDataFromAppSheet: " + JSON.stringify(o_refDataFromAppSheet, null, 2)
+  ); */
+
+  let mergedData = mergeRowRefData(o_rowDataAppSheet, o_refDataFromAppSheet);
+  /*
+   Logger.log(    "End of mergeRowRefData"    
+  + "\n o_rowDataAppSheet: " + JSON.stringify(o_rowDataAppSheet, null, 2)    
+  + "\n o_refDataFromAppSheet: " + JSON.stringify(o_refDataFromAppSheet, null, 2)    
+  + "\n\n --- RESULT mergeRowRefData --- :"
+  + "\n mergedData: " + JSON.stringify (mergedData, null, 2)  
+  );  */
+
+  console.log(JSON.stringify(mergedData, null, 2));
+
+}//function test_mergeAppSheetData(){
+
+function test_getImagesFromAppSheet() {
+
+  const APP_ID = APP_ID_dev
+  const APP_ACCESS_KEY = APP_ACCESS_KEY_dev
+  const APPSHEET_REGION = APPSHEET_REGION_dev
+  const tableName = "item"
+
+  const json_data_structure = json_data_structure_dev
+
+  const o_mergedData = {
+    "_RowNumber": "4",
+    "id": "item_id_3",
+    "label": "hammer",
+    "category": {
+      "id": "tool",
+      "label": "Tool",
+      "location": "C"
+    },
+    "price": "3",
+    "trigger_script": "8",
+    "image": "item_Images/item_id_3.iimage.090333.png",
+    "Related entrys": [
+      {
+        "_RowNumber": "4",
+        "id": "b93caaff",
+        "timestamp": "09/16/2025 10:54:12",
+        "item": "item_id_3",
+        "amount": "4",
+        "image_entry": "entry_Images/b93caaff.image.133830.png"
+      },
+      {
+        "_RowNumber": "5",
+        "id": "7fef709d",
+        "timestamp": "09/16/2025 11:03:22",
+        "item": "item_id_3",
+        "amount": "5",
+        "image_entry": "entry_Images/7fef709d.image.133840.png"
+      },
+      {
+        "_RowNumber": "8",
+        "id": "6df5b473",
+        "timestamp": "11/03/2025 10:28:44",
+        "item": "item_id_3",
+        "amount": "99",
+        "image_entry": "entry_Images/6df5b473.image.133858.png"
+      }
+    ],
+    "_sumEntry": "108"
+  }
+
+  const o_newMergedData = getImagesBlobFromAppSheet(APP_ID, o_mergedData, tableName, json_data_structure)
+  Logger.log(JSON.stringify(o_newMergedData, null, 2))
+
+}//function test_getImagesFromAppSheet(){
+
+function test_replacePlaceholdersInDoc() {
+
+  const template_doc_id = template_doc_id_dev;
+  const folder_id = folder_id_dev;
+  const tableName = "item"
+
+  let newDocId = copyDoc(template_doc_id, folder_id);
+  const json_data_structure = json_data_structure_dev
+  const o_mergedData = o_mergedData_dev
+  const json_placeholdersFromDoc = json_placeholdersFromDoc_dev
+
+  replacePlaceholdersInDoc(newDocId, o_mergedData, json_data_structure, tableName, imageSize)
+
+}//function test_replacePlaceholdersInDoc() {
+
+function test_fillDocumentPlaceholders() {
+
+  let newDocId = "XXXXXX" //any manual copy
+  const table = "item";
+  let rawData1 = [{ "_RowNumber": "4", "id": "item_id_3", "label": "hammer", "category": "tool", "price": "3", "trigger_script": "8", "Related entrys": "b93caaff , 7fef709d", "_sumEntry": "9" }];
+  var json_rawDataAppSheet1 = rawData1[0];
+
+  let json_table_structure = {
+    "item": [{ "column": "id", "type": "key" }, { "column": "Related entrys", "type": "ref_list", "source": "entry" }, { "column": "category", "type": "ref", "source": "category" }],
+    "category": [{ "column": "id", "type": "key" }],
+    "entry": [{ "column": "id", "type": "key" }, { "column": "item", "type": "ref", "source": "item" }]
+  };
+  fillDocumentPlaceholders(newDocId, json_rawDataAppSheet1, table, json_table_structure)
+
+}//function test_fillDocumentPlaceholders(){
