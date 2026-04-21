@@ -1,0 +1,85 @@
+/**
+ * Main function to generate the output object.
+ *
+ * @param {string} bodyText The input text containing the placeholders and start/end syntax.
+ * @return {object} The structured output object.
+ */
+function getPlaceHoldersFromDoc(template_doc_id_dev) {
+
+  //get list of placeholders from the doc.
+  const template_doc_id = template_doc_id_dev;
+  const doc = DocumentApp.openById(template_doc_id);
+  const body = doc.getBody();
+  const bodyText = body.getText();
+
+  // Output object to store the extracted data
+  let o_structure = {};
+  let newText = bodyText
+  let a_match = []
+
+  // *** 1. processing start/end statements first *** 
+
+  //looking for start/end statements
+  const a_matches_startEnd = [...newText.matchAll(START_END_REGEX_gi)];
+
+  //at least one start/end statement in the newText, but not nested
+  if (a_matches_startEnd.length > 0) {
+    a_matches_startEnd.map(match => {
+
+      let textFound = match[0]
+      let refColumnWithBrackets = match[1]
+      REF_BRACKET_REGEX_g.lastIndex = 0//resetting because of apps script mishandling regex object here
+      let refColumn = REF_BRACKET_REGEX_g.exec(refColumnWithBrackets)[1]//removing brackets
+      let textEval = match[2]
+
+      //Add property to object if new
+      if (!o_structure[refColumn]) { o_structure[refColumn] = {} }
+
+      //get nested placeholders from textEval
+      while ((a_match = PLACEHOLDER_REGEX_g.exec(textEval)) !== null) {
+        REF_BRACKET_REGEX_g.lastIndex = 0//resetting because of apps script mishandling regex object here
+        let propertyWithBracket = a_match[1]
+        let property = REF_BRACKET_REGEX_g.exec(propertyWithBracket)[1]
+        //Add sub-property to object if new
+        if (!o_structure[refColumn][property]) { o_structure[refColumn][property] = {} }
+      }//while ((a_match = PLACEHOLDER_REGEX.exec(textEval)) !== null) {
+
+      //remove start/end statement from text 
+      newText = newText.replace(textFound, "")
+
+    })//a_matches.map(match => {
+
+  }//if (matches.length > 0) { for START_END_REGEX
+
+  // *** 2. processing direct statements *** 
+
+  //get placeholders to evaluate  
+  let a_match_placeholder = []
+  while ((a_match_placeholder = PLACEHOLDER_REGEX_g.exec(newText)) !== null) {
+    //evaluate placeholder content
+    let match_placeholder_expression = a_match_placeholder[1]
+    let a_deref = []
+    let a_match_content = []
+    //getting deref list
+    while ((a_match_content = DEREF_BRACKET_REGEX_g.exec(match_placeholder_expression)) !== null) {
+      a_deref.push(a_match_content[1]);
+    }
+    //enriching o_structure
+    enrichDocPlaceholderStructure(o_structure, a_deref)
+  }//while ((a_match_placeholder = PLACEHOLDER_REGEX.exec(newText)) !== null) {
+  return o_structure;
+}//function getPlaceHoldersFromDoc(template_doc_id_dev) {
+
+/**
+ * Recursively ensures that a deeply nested path of properties exists within a root object.
+ * If properties don't exist, they are created.
+ *
+ * @param {Object} o_structure - The main object to traverse and complete
+ * @param {Array<string>} a_deref - An array defining the path to ensure.
+ */
+function enrichDocPlaceholderStructure(o_structure, a_deref) {
+  if (a_deref.length === 0) { return }
+  const currentProperty = a_deref.shift();
+  if (!o_structure[currentProperty] || typeof o_structure[currentProperty] !== 'object' || Array.isArray(o_structure[currentProperty])) { o_structure[currentProperty] = {} }
+  enrichDocPlaceholderStructure(o_structure[currentProperty], a_deref);
+}//function ensurePathExists(o_structure, a_deref) {
