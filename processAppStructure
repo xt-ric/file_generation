@@ -1,0 +1,98 @@
+function test_processAppStructure() {
+ 
+  const o_app_structure=getFileAppStructure(app_structure_docId_dev)
+
+  const finalResult = processAppStructure(o_app_structure);
+
+  // Log the output
+  Logger.log("Processed Structure:");
+  Logger.log(JSON.stringify(finalResult, null, 2));
+}//function test_processAppStructure() {
+  
+  
+  /**
+ * Processes the raw AppSheet OpenAPI JSON to generate a precise nested structure
+ * identifying Keys, Images, Single Refs, and Inline Ref_Lists.
+ * 
+ * @param {Object} o_app_structure The raw JSON from AppSheet API.
+ * @return {Object} The simplified, processed app structure.
+ */
+function processAppStructure(o_app_structure) {
+  if (!o_app_structure || !o_app_structure.components || !o_app_structure.components.schemas) {
+    Logger.log("Error: Invalid input JSON structure.");
+    return {};
+  }
+
+  const schemas = o_app_structure.components.schemas;
+  const processedStructure = {};
+
+  // Find all table names by looking for schemas ending in "_Keys"
+  const tableSuffix = "_Keys";
+  const tableNames = Object.keys(schemas)
+    .filter(schemaName => schemaName.endsWith(tableSuffix))
+    .map(schemaName => schemaName.replace(tableSuffix, ""));
+
+  Logger.log("Identified Tables: " + JSON.stringify(tableNames));
+
+  tableNames.forEach(tableName => {
+    processedStructure[tableName] = {};
+
+    // Get the core schemas for this table
+    const mainSchema = schemas[tableName]; // Used for Ref_Lists (Virtual Cols)
+    const keysSchema = schemas[tableName + tableSuffix]; // Used to identify Key
+    const createRequestSchema = schemas[`Create_${tableName}_Request`]; // Used for Refs and Images
+
+    if (!mainSchema || !keysSchema || !createRequestSchema) {
+      Logger.log(`Warning: Definitions for table '${tableName}' are incomplete.`);
+      return;
+    }
+
+    const properties = mainSchema.properties;
+    const keyFields = keysSchema.required || [];
+    const inputProperties = createRequestSchema.properties || {};
+
+    // Iterate through all columns/properties defined in the MAIN schema (includes Virtual Columns)
+    Object.keys(properties).forEach(columnName => {
+      const columnDef = properties[columnName];
+      const inputDef = inputProperties[columnName]; // Look up the input definition
+      let typeInfo = {};
+
+      // 1. Identify Key Columns
+      if (keyFields.includes(columnName)) {
+        typeInfo = { type: "key" };
+      } 
+      // 2. Process properties that exist in the Create Request (Physical Columns)
+      else if (inputDef) {
+        // A) Identify Image Columns
+        if (inputDef.format === "uri-reference") {
+          typeInfo = { type: "image" };
+        } 
+        // B) Identify Single Ref Columns
+        // In the input properties, standard columns have title === name (e.g. price).
+        // A Single Ref column has title === table name (e.g. category).
+        else if (inputDef.title && inputDef.title !== columnName && tableNames.includes(inputDef.title)) {
+          typeInfo = { 
+            type: "ref",
+            source: inputDef.title // The table it references
+          };
+        }
+      }
+      // 3. Process properties that DO NOT exist in the Create Request (Virtual Columns)
+      // If it has a title matching a table name, it's an Inline Ref List.
+      // E.g., column "Related entrys" has title "entry".
+      else if (columnDef.title && tableNames.includes(columnDef.title)) {
+        typeInfo = { 
+          type: "ref_list",
+          source: columnDef.title // The table contained in the list
+        };
+      }
+
+      // 4. Add to the final structure only if a special type was identified
+      if (typeInfo.type) {
+        processedStructure[tableName][columnName] = typeInfo;
+      }
+    });
+  });
+
+  return processedStructure;
+}
