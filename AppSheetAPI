@@ -1,0 +1,223 @@
+/**
+ * Source: 
+ * AppSheet documentation > Invoke the API
+ * https://support.google.com/appsheet/answer/10105398
+ * 
+*/
+
+/**
+ * This function returns a list of records from a table according to a filter expression
+ * Documentation source: https://support.google.com/appsheet/answer/10105770?hl=en&ref_topic=10105767&sjid=1018665257488875345-EU
+ * 
+ * Params:
+ * @appID: appId of app to trigger
+ * @accessKeyApp: to get in the app editor (make sure integration is enabled)
+ * @tableName: table name to which the action is attached
+ * @text_selector: filter/select expression given as a text. 
+ * @response: the output response is the list of rows in HTTP contents
+ * 
+ * exemple: 
+ * text_selector="FILTER(Items,[current_stock]<40 )"
+ * 
+ */
+
+
+function appsheetAPI_find(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, text_selector) {
+  let functionName = "appsheetAPI_find"
+  Logger.log("Starting " + functionName + " ...")
+  let url = "https://" + APPSHEET_REGION + "/api/v2/apps/" + APP_ID + "/tables/" + table + "/Action?applicationAccessKey=" + APP_ACCESS_KEY
+  //Logger.log ("url: "+ url)    
+
+  try {
+    let payload = {
+      "Action": "Find",
+      "Properties": {
+        "Locale": "en-US",
+        "Selector": text_selector,
+        "RunAsUserEmail": Session.getEffectiveUser().getEmail()
+      },
+      "Rows": [
+      ]
+    }
+    //Logger.log ("payload: "+ JSON.stringify(payload,null,2))
+    const options = {
+      'method': 'post',
+      'contentType': 'application/json',
+      'muteHttpExceptions': true,
+      'payload': JSON.stringify(payload)
+    }
+    //Logger.log ("options: "+ JSON.stringify(options,null,2))
+    let response = UrlFetchApp.fetch(url, options);
+    Logger.log("status: " + response.getResponseCode())
+    if (response.getResponseCode() != "200") { displayResponseCodeList() }    
+    let response_json = JSON.parse(response)
+    return response_json
+  } catch (e) {//try{
+    handleError_appsheetAPI(e, functionName)
+  }//} catch (e) {
+    
+}//function appsheetAPI_find() {
+
+
+function appsheetAPI_edit(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_rows) {
+  let functionName = "appsheetAPI_edit"
+  Logger.log("Starting " + functionName + " ...")
+  let url = "https://" + APPSHEET_REGION + "/api/v2/apps/" + APP_ID + "/tables/" + table + "/Action?applicationAccessKey=" + APP_ACCESS_KEY
+
+  try {
+    let payload = {
+      "Action": "Edit",
+      "Properties": { "Locale": "en-US" },
+      "Rows": a_rows
+    }
+    //Logger.log ("payload: "+ payload)
+    const options = {
+      'method': 'post',
+      'contentType': 'application/json',
+      'muteHttpExceptions': true,
+      'payload': JSON.stringify(payload)
+    }
+    //Logger.log ("options: "+ JSON.stringify(options,null,2))
+
+    let response = UrlFetchApp.fetch(url, options);
+
+    Logger.log("status: " + response.getResponseCode())
+    if (response.getResponseCode() != "200") { displayResponseCodeList() }
+  } catch (e) {//try {
+    handleError_appsheetAPI(e, functionName)
+  }//} catch (e) {
+
+}//function appsheetAPI_edit() {
+
+function appsheetAPI_delete(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_rows) {
+  let functionName = "appsheetAPI_delete"
+  Logger.log("Starting " + functionName + " ...")
+
+  let url = "https://" + APPSHEET_REGION + "/api/v2/apps/" + APP_ID + "/tables/" + table + "/Action?applicationAccessKey=" + APP_ACCESS_KEY
+
+  try {
+    let payload = {
+      "Action": "Delete",
+      "Properties": { "Locale": "en-US" },
+      "Rows": a_rows
+    }
+    //Logger.log ("payload: "+ payload)
+    const options = {
+      'method': 'post',
+      'contentType': 'application/json',
+      'muteHttpExceptions': true,
+      'payload': JSON.stringify(payload)
+    }
+    //Logger.log ("options: "+ JSON.stringify(options,null,2))
+    let response = UrlFetchApp.fetch(url, options);
+    Logger.log("status: " + response.getResponseCode())
+    if (response.getResponseCode() != "200") { displayResponseCodeList() }
+  } catch (e) {//try{
+    handleError_appsheetAPI(e, functionName)
+  }//} catch (e) {
+}//function appsheetAPI_delete() {
+
+
+function appsheetAPI_add(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_rows) {
+  let functionName = "appsheetAPI_add"
+  Logger.log("Starting " + functionName + " ...")
+
+  let url = "https://" + APPSHEET_REGION + "/api/v2/apps/" + APP_ID + "/tables/" + table + "/Action?applicationAccessKey=" + APP_ACCESS_KEY
+
+  try {
+    let payload = {
+      "Action": "Add",
+      "Properties": { "Locale": "en-US" },
+      "Rows": a_rows
+    }
+    //Logger.log ("payload: "+ payload)
+    const options = {
+      'method': 'post',
+      'contentType': 'application/json',
+      'muteHttpExceptions': true,
+      'payload': JSON.stringify(payload)
+    }
+    //Logger.log ("options: "+ JSON.stringify(options,null,2))
+    let response = UrlFetchApp.fetch(url, options);
+    Logger.log("status: " + response.getResponseCode())
+    if (response.getResponseCode() != "200") { displayResponseCodeList() }
+  } catch (e) {//try {
+    handleError_appsheetAPI(e, functionName)
+  }//} catch (e) {
+
+}//function appsheetAPI_add(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, a_rows) {
+
+/**
+ * This function applies a data action from the app on a selection of rows entered as a parameter 
+ * from AppSheet
+ * Documentation source:  https://support.google.com/appsheet/answer/10104497?hl=en&ref_topic=10105767&sjid=1018665257488875345-EU
+ * 
+ * Params:
+ * @APP_ID: appId of app to trigger
+ * @APP_ACCESS_KEY: to get in the app editor (make sure integration is enabled)
+ * @table: table name to which the action is attached
+ * @action:name of the action of type "Data:set the values of some columns in this row"
+ * @a_rows: list of rows as an object, for example: "[{idTable:id1},{idTable:id2},{idTable:id3}]"
+ * @referencedTableIdColumnName: name of the key-column of the referenced table
+ * 
+ */
+function appsheetAPI_action(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, custom_action, a_rows) {
+  let functionName = "appsheetAPI_action"
+  Logger.log("Starting " + functionName + " ...")
+
+  let url = "https://" + APPSHEET_REGION + "/api/v2/apps/" + APP_ID + "/tables/" + table + "/Action?applicationAccessKey=" + APP_ACCESS_KEY
+  //Logger.log ("url: "+ url)    
+  //Logger.log("a_rows: " + JSON.stringify(a_rows, null, 2))
+
+  try {
+    let payload = {
+      "Action": custom_action,
+      "Properties": { "Locale": "en-US" },
+      "Rows": a_rows
+    }
+    //Logger.log ("payload: "+ payload)
+    const options = {
+      'method': 'post',
+      'contentType': 'application/json',
+      'muteHttpExceptions': true,
+      'payload': JSON.stringify(payload)
+    }
+    //Logger.log ("options: "+ JSON.stringify(options,null,2))
+    let response = UrlFetchApp.fetch(url, options);
+    Logger.log("status: " + response.getResponseCode())
+    if (response.getResponseCode() != "200") { displayResponseCodeList() }
+  } catch (e) {//try {
+    handleError_appsheetAPI(e, functionName)
+  }//} catch (e) {
+}//function appsheetAPI_action(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, table, custom_action, a_rows) {
+
+
+function handleError_appsheetAPI(e, functionName) {
+
+  Logger.log("error at running : " + functionName + "\n" + e)
+  /*
+  Logger.log ("sending email to: "+ Session.getEffectiveUser().getEmail())
+  MailApp.sendEmail({
+    to: Session.getEffectiveUser().getEmail(),
+    subject: "Error with function "+functionName,
+    body: "Error with function "+functionName+" at:" + new Date() + " with error: "+ e
+  })//MailApp.sendEmail({
+    */
+}//function handleError(e,functionName) {
+
+function displayResponseCodeList() {
+  Logger.log("reminder of http status codes: "
+    +"\n 200 Success" +
+    +"\n 400 Bad Request: " +
+    +"\n   The Application Access Key is missing." +
+    +"\n   The AppId is missing." +
+    +"\n   The POST body contains invalid data." +
+    +"\n 403 Forbidden" +
+    +"\n   The Web API is not enabled for this application." +
+    +"\n   The Application Access Key is invalid." +
+    +"\n 404 Not Found" +
+    +"\n   The application specified by the AppId cannot be found." +
+    +"\n 500 Internal Server Error" +
+    +"\n   An unexpected error occurred"
+  )
+}//function logError(response) {
