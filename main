@@ -32,10 +32,7 @@ const START_END_REGEX_gi = /<<Start:\s*(.*?)>>([\s\S]*?)<<End>>/gi;
 function main_call_template(APP_ID, APP_ACCESS_KEY, APPSHEET_REGION, row_id, tableName, template_doc_id, structure_ss_id, folder_id, imageSize, b_pdf) {
 
   //get data structure
-  const o_app_structure = getFileAppStructure(app_structure_docId_dev)
-  //const json_data_structure=processAppStructure(o_app_structure)//TO CONTINUE
-
-  const json_data_structure = getDataStructureFromSheetsSchema(structure_ss_id);//TO DELETE WHEN STEP BEFORE IS COMPLETED
+  const json_data_structure = getDataStructureFromSheetsSchema(structure_ss_id);
   Logger.log("*** json_data_structure *** \n\n " + JSON.stringify(json_data_structure, null, 2));
 
   //get placeholders from template doc id
