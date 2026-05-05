@@ -1,0 +1,73 @@
+/**
+* Recursive function to traverse data structure and inject blobs for images.
+* ==> for each item from o_mergedData, run structure against json_data_structure and replace any image type with an object {value;blob}
+* 
+* @param {object} currentDataObj - The data object currently being processed.
+* @param {object} schemaRegistry - The complete json_data_structure.
+* @param {string} currentTableName - The name of the table in the schema matching currentDataObj.
+* @returns {object} A new object with image strings replaced by blob objects.
+*/
+function getImagesBlobFromAppSheet(APP_ID, o_mergedData, tableName, json_data_structure) {
+
+  let o_newMergedData = { ...o_mergedData };//make a copy - could be avoided later for efficiency?
+
+  if (json_data_structure.hasOwnProperty(tableName)) {
+    const json_table_structure = json_data_structure[tableName];
+    for (let columnName in o_newMergedData) {
+      const columnDefinition = json_table_structure[columnName];
+      if (columnDefinition) {
+        // its type is image and it contains a value
+        if (columnDefinition.type === 'image' && o_newMergedData[columnName]) {
+          const imagePath = o_newMergedData[columnName];
+          const fetchedBlob = fetchAppSheetImage(APP_ID, tableName, imagePath);
+
+          //replace with object{value, blob}
+          // o_newMergedData[key] = {
+          //   value: imagePath,
+          //   imageBlob: fetchedBlob
+          // };
+
+          //replace with blob
+          o_newMergedData[columnName] = fetchedBlob
+          Logger.log(isBlob(fetchedBlob))
+        }//if (columnDefinition.type === 'image' && o_newMergedData[columnName]) {
+
+
+        else if (columnDefinition.type === 'ref_list' && Array.isArray(o_newMergedData[columnName])) {
+          //Recursive call for related entries from main table
+          const childTableName = columnDefinition.source;
+          o_newMergedData[columnName] = o_newMergedData[columnName].map(childItem =>
+            getImagesBlobFromAppSheet(APP_ID, childItem, childTableName, json_data_structure)
+          );
+        }// else if (
+      }//if(columnDefinition){
+    }// for (let columnName in o_newMergedData) {
+  }//if (json_structure.hasOwnProperty(tableName)) {
+
+  return o_newMergedData;
+
+}//function getImagesFromAppSheet(APP_ID, o_mergedData,tableName,json_data_structure) {
+
+
+/**
+ * get image blob from urlFetchApp (note: this can be later made with a direct lookup into Drive storage)
+ */
+function fetchAppSheetImage(APP_ID, tableName, imagePath) {
+
+  try {
+    const imageUrl = `https://www.appsheet.com/template/gettablefileurl?appName=${encodeURIComponent(APP_ID)}&tableName=${encodeURIComponent(tableName)}&fileName=${encodeURIComponent(imagePath)}`;
+
+    const response = UrlFetchApp.fetch(imageUrl, { muteHttpExceptions: true });
+    const responseCode = response.getResponseCode();
+
+    if (responseCode === 200) {
+      return response.getBlob();
+    } else {
+      Logger.log(`[Image Fetch] Failed. Response code: ${responseCode} for image: ${imagePath}`);
+      return null;
+    }
+  } catch (e) {
+    Logger.log(`[Image Fetch] Exception occurred: ${e.toString()}`);
+    return null;
+  }
+}
